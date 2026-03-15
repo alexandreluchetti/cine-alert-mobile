@@ -1,0 +1,216 @@
+{
+  "info": {
+    "_postman_id": "cinealert-api-collection",
+    "name": "CineAlert API",
+    "description": "Complete API collection for CineAlert — Movie & Series Reminder App",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alexandre Lucchetta\",\n  \"email\": \"alex@email.com\",\n  \"password\": \"senha123\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const r = pm.response.json();",
+                "pm.collectionVariables.set('access_token', r.accessToken);",
+                "pm.collectionVariables.set('refresh_token', r.refreshToken);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex@email.com\",\n  \"password\": \"senha123\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const r = pm.response.json();",
+                "pm.collectionVariables.set('access_token', r.accessToken);",
+                "pm.collectionVariables.set('refresh_token', r.refreshToken);"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refreshToken\": \"{{refresh_token}}\"}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Search",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/content/search?q=Interstellar",
+              "query": [{ "key": "q", "value": "Interstellar" }]
+            }
+          }
+        },
+        {
+          "name": "Get Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/content/tt0816692"
+          }
+        },
+        {
+          "name": "Trending",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/content/trending"
+          }
+        },
+        {
+          "name": "Genres",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/content/genres"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reminders",
+      "item": [
+        {
+          "name": "List Reminders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/reminders"
+          }
+        },
+        {
+          "name": "Create Reminder",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/reminders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contentId\": 1,\n  \"scheduledAt\": \"2026-12-25T20:00:00\",\n  \"recurrence\": \"ONCE\",\n  \"message\": \"Hora de assistir Interstellar! 🚀\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Reminder Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/reminders/stats"
+          }
+        },
+        {
+          "name": "Cancel Reminder",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/reminders/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/users/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/users/me",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Alexandre L.\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Register FCM Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/notifications/token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"fcmToken\": \"seu-fcm-device-token-aqui\"}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
