@@ -15,7 +15,7 @@ class AuthEntity {
 }
 
 class UserInfo {
-  final int id;
+  final String id;
   final String name;
   final String email;
   final String? avatarUrl;

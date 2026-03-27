@@ -1,5 +1,5 @@
 class ContentEntity {
-  final int? id;
+  final String? id;
   final String imdbId;
   final String title;
   final String type;

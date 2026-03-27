@@ -19,7 +19,7 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
   }
 
   Future<bool> createReminder({
-    required int contentId,
+    required String contentId,
     required DateTime scheduledAt,
     required String recurrence,
     String? message,
@@ -38,7 +38,7 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
     }
   }
 
-  Future<bool> cancelReminder(int id) async {
+  Future<bool> cancelReminder(String id) async {
     try {
       await _repository.cancelReminder(id);
       await loadReminders();

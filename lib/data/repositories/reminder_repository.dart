@@ -24,7 +24,7 @@ class ReminderRepository {
   }
 
   Future<ReminderEntity> createReminder({
-    required int contentId,
+    required String contentId,
     required DateTime scheduledAt,
     required String recurrence,
     String? message,
@@ -42,7 +42,7 @@ class ReminderRepository {
     }
   }
 
-  Future<void> cancelReminder(int id) async {
+  Future<void> cancelReminder(String id) async {
     try {
       await _dio.delete('/reminders/$id');
     } on DioException catch (e) {

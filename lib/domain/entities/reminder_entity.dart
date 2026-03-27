@@ -4,7 +4,7 @@ enum ReminderStatus { pending, sent, cancelled }
 enum Recurrence { once, daily, weekly }
 
 class ReminderEntity {
-  final int id;
+  final String id;
   final ContentEntity content;
   final DateTime scheduledAt;
   final Recurrence recurrence;
