@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../domain/entities/reminder_entity.dart';
 import '../../data/repositories/reminder_repository.dart';
 
@@ -25,12 +26,25 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
     String? message,
   }) async {
     try {
-      await _repository.createReminder(
+      final newReminder = await _repository.createReminder(
         contentId: contentId,
         scheduledAt: scheduledAt,
         recurrence: recurrence,
         message: message,
       );
+
+      // Dispara imediatamente para diagnosticar
+      await NotificationService.instance.showTestNotification();
+
+      await NotificationService.instance.scheduleReminder(
+        id: newReminder.id.hashCode,
+        title: 'CineAlert: Lembrete!',
+        body: newReminder.message?.isNotEmpty == true 
+            ? newReminder.message! 
+            : 'Seu lembrete para assistir ${newReminder.content.title} chegou!',
+        scheduledAt: scheduledAt,
+      );
+
       await loadReminders();
       return true;
     } catch (e) {
@@ -41,6 +55,7 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
   Future<bool> cancelReminder(String id) async {
     try {
       await _repository.cancelReminder(id);
+      await NotificationService.instance.cancelReminder(id.hashCode);
       await loadReminders();
       return true;
     } catch (e) {

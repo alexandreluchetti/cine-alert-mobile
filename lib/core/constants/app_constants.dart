@@ -6,7 +6,7 @@ class AppConstants {
     'BASE_URL',
     defaultValue: bool.fromEnvironment('dart.library.js_util')
         ? 'http://localhost:8080'
-        : 'http://10.0.2.2:8080',
+        : 'http://192.168.18.19:8080',
   );
 
   static const String apiPrefix = '/api';
