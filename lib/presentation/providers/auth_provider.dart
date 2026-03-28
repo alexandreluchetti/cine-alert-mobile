@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/auth_entity.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../core/notifications/notification_service.dart';
 
 // Auth state
 sealed class AuthState {}
@@ -24,7 +25,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> checkAuthentication() async {
     final isAuth = await _repository.isAuthenticated();
-    if (!isAuth) state = AuthUnauthenticated();
+    if (!isAuth) {
+      state = AuthUnauthenticated();
+    } else {
+      // Se autenticado no início, tenta sincronizar o token FCM
+      _syncFcmToken();
+    }
     return isAuth;
   }
 
@@ -33,6 +39,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final auth = await _repository.login(email, password);
       state = AuthAuthenticated(auth);
+      _syncFcmToken();
       return true;
     } catch (e) {
       state = AuthError(e.toString());
@@ -45,10 +52,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final auth = await _repository.register(name, email, password);
       state = AuthAuthenticated(auth);
+      _syncFcmToken();
       return true;
     } catch (e) {
       state = AuthError(e.toString());
       return false;
+    }
+  }
+
+  Future<void> _syncFcmToken() async {
+    final token = await NotificationService.instance.getFcmToken();
+    if (token != null) {
+      await _repository.updateFcmToken(token);
     }
   }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "714844030462",
+    "project_id": "cinealert-d510c",
+    "storage_bucket": "cinealert-d510c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714844030462:android:5e939e3b1d5d358c3d6caf",
+        "android_client_info": {
+          "package_name": "com.example.cine_alert"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhsjbkK8hZAeMfS_GkyflirceUh3B4yPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

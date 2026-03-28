@@ -2,17 +2,36 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/routes/app_router.dart';
 import 'core/constants/app_theme.dart';
 import 'core/notifications/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  debugPrint('=== App Startup: Starting Initializations ===');
+  
+  try {
+    // Initialize Firebase
+    debugPrint('=== App Startup: Initializing Firebase ===');
+    await Firebase.initializeApp();
+    debugPrint('=== App Startup: Firebase Initialized ===');
+  } catch (e) {
+    debugPrint('=== App Startup: Firebase Initialization Failed: $e ===');
+  }
+  
   await initializeDateFormatting('pt_BR', null);
 
-  // Initialize notifications
-  await NotificationService.instance.initialize();
-  await NotificationService.instance.requestPermissions();
+  try {
+    // Initialize notifications
+    debugPrint('=== App Startup: Initializing Notifications ===');
+    await NotificationService.instance.initialize();
+    await NotificationService.instance.requestPermissions();
+    debugPrint('=== App Startup: Notifications Initialized ===');
+  } catch (e) {
+    debugPrint('=== App Startup: Notification Initialization Failed: $e ===');
+  }
 
   // App-level error handling
   FlutterError.onError = (FlutterErrorDetails details) {

@@ -60,6 +60,15 @@ class AuthRepository {
     }
   }
 
+  Future<void> updateFcmToken(String token) async {
+    try {
+      await _dio.put('/users/me/fcm-token', data: {'token': token});
+    } on DioException catch (e) {
+      // Falha silenciosa ou logar, fcm token não deve travar o app
+      print('=== Failed to update FCM token: $e ===');
+    }
+  }
+
   Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(AppConstants.accessTokenKey);

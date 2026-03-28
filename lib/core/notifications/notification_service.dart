@@ -3,6 +3,14 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you're going to use other Firebase services in the background, 
+  // such as Firestore, make sure you call `initializeApp` before using other Firebase services.
+  print('=== Background Message Received: ${message.messageId} ===');
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -42,9 +50,58 @@ class NotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {},
     );
+
+    // FCM Setup
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Foreground listener
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('=== Foreground Message Received: ${message.notification?.title} ===');
+      if (message.notification != null) {
+        _showNotification(
+          message.notification!.hashCode,
+          message.notification!.title ?? 'CineAlert',
+          message.notification!.body ?? '',
+        );
+      }
+    });
+  }
+
+  Future<void> _showNotification(int id, String title, String body) async {
+    await flutterLocalNotificationsPlugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'cine_alert_channel',
+          'Lembretes',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  Future<String?> getFcmToken() async {
+    try {
+      return await FirebaseMessaging.instance.getToken();
+    } catch (e) {
+      print('=== Error getting FCM token: $e ===');
+      return null;
+    }
   }
 
   Future<void> requestPermissions() async {
+    // Request FCM permission
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
