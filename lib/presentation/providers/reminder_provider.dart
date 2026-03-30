@@ -33,14 +33,11 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
         message: message,
       );
 
-      // Dispara imediatamente para diagnosticar
-      await NotificationService.instance.showTestNotification();
-
       await NotificationService.instance.scheduleReminder(
         id: newReminder.id.hashCode,
         title: 'CineAlert: Lembrete!',
-        body: newReminder.message?.isNotEmpty == true 
-            ? newReminder.message! 
+        body: newReminder.message?.isNotEmpty == true
+            ? newReminder.message!
             : 'Seu lembrete para assistir ${newReminder.content.title} chegou!',
         scheduledAt: scheduledAt,
       );
@@ -65,7 +62,8 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
 }
 
 final reminderProvider =
-    StateNotifierProvider<ReminderNotifier, AsyncValue<List<ReminderEntity>>>((ref) {
+    StateNotifierProvider<ReminderNotifier, AsyncValue<List<ReminderEntity>>>(
+        (ref) {
   return ReminderNotifier(ref.watch(reminderRepositoryProvider));
 });
 

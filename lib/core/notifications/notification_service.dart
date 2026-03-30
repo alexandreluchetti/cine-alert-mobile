@@ -156,29 +156,6 @@ class NotificationService {
     }
   }
 
-  // Future<void> showTestNotification() async {
-  //   try {
-  //     await flutterLocalNotificationsPlugin.show(
-  //       id: 999999,
-  //       title: 'CineAlert Diagnóstico',
-  //       body: 'As permissões visuais e os ícones estão funcionando!',
-  //       notificationDetails: const NotificationDetails(
-  //         android: AndroidNotificationDetails(
-  //           'cine_alert_channel',
-  //           'Lembretes',
-  //           importance: Importance.max,
-  //           priority: Priority.high,
-  //           icon: '@mipmap/ic_launcher',
-  //         ),
-  //         iOS: DarwinNotificationDetails(),
-  //       ),
-  //     );
-  //     print('=== Immediate Test Notification Triggered! ===');
-  //   } catch (e) {
-  //     print('=== Immediate Test Failed: $e ===');
-  //   }
-  // }
-
   Future<void> cancelReminder(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id: id);
   }
