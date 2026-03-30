@@ -78,6 +78,16 @@ class _ScheduleReminderSheetState extends ConsumerState<ScheduleReminderSheet> {
       return;
     }
 
+    if (widget.content.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Conteúdo sem ID, não é possível criar o lembrete'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
 
     final recurrenceStr = _recurrence.name.toUpperCase();

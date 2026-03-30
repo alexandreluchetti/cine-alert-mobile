@@ -7,7 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, 
+  // If you're going to use other Firebase services in the background,
   // such as Firestore, make sure you call `initializeApp` before using other Firebase services.
   print('=== Background Message Received: ${message.messageId} ===');
 }
@@ -41,7 +41,8 @@ class NotificationService {
       requestSoundPermission: false,
     );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
@@ -56,7 +57,8 @@ class NotificationService {
 
     // Foreground listener
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('=== Foreground Message Received: ${message.notification?.title} ===');
+      print(
+          '=== Foreground Message Received: ${message.notification?.title} ===');
       if (message.notification != null) {
         _showNotification(
           message.notification!.hashCode,
@@ -112,8 +114,8 @@ class NotificationService {
             sound: true,
           );
     } else if (defaultTargetPlatform == TargetPlatform.android) {
-      final androidPlugin = flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
+      final androidPlugin =
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
 
       await androidPlugin?.requestNotificationsPermission();
@@ -154,28 +156,28 @@ class NotificationService {
     }
   }
 
-  Future<void> showTestNotification() async {
-    try {
-      await flutterLocalNotificationsPlugin.show(
-        id: 999999,
-        title: 'CineAlert Diagnóstico',
-        body: 'As permissões visuais e os ícones estão funcionando!',
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'cine_alert_channel',
-            'Lembretes',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-      );
-      print('=== Immediate Test Notification Triggered! ===');
-    } catch (e) {
-      print('=== Immediate Test Failed: $e ===');
-    }
-  }
+  // Future<void> showTestNotification() async {
+  //   try {
+  //     await flutterLocalNotificationsPlugin.show(
+  //       id: 999999,
+  //       title: 'CineAlert Diagnóstico',
+  //       body: 'As permissões visuais e os ícones estão funcionando!',
+  //       notificationDetails: const NotificationDetails(
+  //         android: AndroidNotificationDetails(
+  //           'cine_alert_channel',
+  //           'Lembretes',
+  //           importance: Importance.max,
+  //           priority: Priority.high,
+  //           icon: '@mipmap/ic_launcher',
+  //         ),
+  //         iOS: DarwinNotificationDetails(),
+  //       ),
+  //     );
+  //     print('=== Immediate Test Notification Triggered! ===');
+  //   } catch (e) {
+  //     print('=== Immediate Test Failed: $e ===');
+  //   }
+  // }
 
   Future<void> cancelReminder(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id: id);
