@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/cinealert_logo.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -41,52 +42,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo icon
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Icon(
-                Icons.movie_filter_rounded,
-                color: Colors.black,
-                size: 56,
-              ),
-            )
+            // Logo
+            const CineAlertLogo(size: 100, showText: true)
                 .animate()
                 .scale(duration: 500.ms, curve: Curves.elasticOut)
                 .fadeIn(duration: 400.ms),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'CineAlert',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 36,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Inter',
-                letterSpacing: -0.5,
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 300.ms, duration: 500.ms)
-                .slideY(begin: 0.3, end: 0),
-
-            const SizedBox(height: 8),
-
-            const Text(
-              'Seus filmes. Seus lembretes.',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-                fontFamily: 'Inter',
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 500.ms, duration: 500.ms),
 
             const SizedBox(height: 60),
 
