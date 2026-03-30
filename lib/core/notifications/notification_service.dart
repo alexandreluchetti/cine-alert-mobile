@@ -32,7 +32,7 @@ class NotificationService {
 
     // 'ic_launcher' requires the @mipmap prefix to be found inside Flutter's Android mipmap tree.
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('ic_notification');
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
@@ -80,7 +80,7 @@ class NotificationService {
           'Lembretes',
           importance: Importance.max,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: 'ic_notification',
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -144,7 +144,7 @@ class NotificationService {
             channelDescription: 'Notificações de lembretes do CineAlert',
             importance: Importance.max,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: 'ic_notification',
           ),
           iOS: DarwinNotificationDetails(),
         ),
