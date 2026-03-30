@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/cinealert_button.dart';
+import '../../widgets/cinealert_logo.dart';
 import '../../widgets/cinealert_text_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -65,28 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
 
                 // Logo
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: const Icon(Icons.movie_filter_rounded,
-                      color: Colors.black, size: 40),
-                ).animate().scale(duration: 400.ms, curve: Curves.easeOut),
-
-                const SizedBox(height: 16),
-
-                const Text(
-                  'CineAlert',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Inter',
-                  ),
-                ).animate().fadeIn(delay: 200.ms),
+                const CineAlertLogo(size: 80, showText: true)
+                    .animate().scale(duration: 400.ms, curve: Curves.easeOut),
 
                 const SizedBox(height: 8),
 

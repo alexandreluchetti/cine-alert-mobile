@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/entities/content_entity.dart';
 import '../../providers/content_provider.dart';
+import '../../widgets/cinealert_logo.dart';
 import '../../widgets/movie_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -38,20 +39,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.movie_filter_rounded,
-                  color: Colors.black, size: 18),
-            ),
-            const SizedBox(width: 10),
-            const Text('CineAlert'),
+            CineAlertLogo(size: 34),
+            SizedBox(width: 10),
+            Text('CineAlert'),
           ],
         ),
         actions: [
