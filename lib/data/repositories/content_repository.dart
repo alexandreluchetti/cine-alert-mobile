@@ -12,7 +12,8 @@ class ContentRepository {
 
   ContentRepository(this._dio);
 
-  Future<List<ContentEntity>> search(String query, {
+  Future<List<ContentEntity>> search(
+    String query, {
     String? type,
     String? genre,
     int? year,
@@ -25,7 +26,8 @@ class ContentRepository {
       if (year != null) params['year'] = year;
       if (minRating != null) params['rating'] = minRating;
 
-      final response = await _dio.get('/content/search', queryParameters: params);
+      final response =
+          await _dio.get('/content/search', queryParameters: params);
       return (response.data as List).map((e) => _parseContent(e)).toList();
     } on DioException catch (e) {
       throw AppException.fromDioError(e);
@@ -43,7 +45,7 @@ class ContentRepository {
 
   Future<List<ContentEntity>> getTrending() async {
     try {
-      final response = await _dio.get('/content/trending');
+      final response = await _dio.get('/content/trending/movies');
       return (response.data as List).map((e) => _parseContent(e)).toList();
     } on DioException catch (e) {
       throw AppException.fromDioError(e);
@@ -67,7 +69,9 @@ class ContentRepository {
       type: data['type'] ?? 'MOVIE',
       posterUrl: data['posterUrl'],
       year: data['year'],
-      rating: data['rating'] != null ? double.tryParse(data['rating'].toString()) : null,
+      rating: data['rating'] != null
+          ? double.tryParse(data['rating'].toString())
+          : null,
       genre: data['genre'],
       synopsis: data['synopsis'],
       trailerUrl: data['trailerUrl'],
