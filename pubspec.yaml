@@ -74,11 +74,9 @@ flutter:
 #          weight: 600
 #        - asset: assets/fonts/Inter-Bold.ttf
 #          weight: 700
-#
-#  assets:
-#    - assets/images/
-#    - assets/icons/
-#    - assets/animations/
+
+  assets:
+    - assets/images/
 
 flutter_launcher_icons:
   android: true
@@ -86,5 +84,5 @@ flutter_launcher_icons:
   image_path: "assets/icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "#1A1A1A"
-  adaptive_icon_foreground: "assets/icon.png"
+  adaptive_icon_foreground: "assets/images/cinealert_logo.png"
 
