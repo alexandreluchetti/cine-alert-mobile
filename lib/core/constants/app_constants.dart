@@ -4,9 +4,7 @@ class AppConstants {
   // API
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: bool.fromEnvironment('dart.library.js_util')
-        ? 'http://localhost:8080'
-        : 'http://192.168.18.19:8080',
+    defaultValue: 'https://api.cinealert.link',
   );
 
   static const String apiPrefix = '/api';
