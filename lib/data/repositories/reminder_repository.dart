@@ -32,7 +32,7 @@ class ReminderRepository {
     try {
       final response = await _dio.post('/reminders', data: {
         'contentId': contentId,
-        'scheduledAt': scheduledAt.toIso8601String(),
+        'scheduledAt': scheduledAt.toUtc().toIso8601String(),
         'recurrence': recurrence,
         if (message != null && message.isNotEmpty) 'message': message,
       });

@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!--
+        Film strip frame + bell icon.
+        All shapes are white on transparent — Android tints the notification icon.
+
+        Film strip borders are split into 3 segments each side,
+        leaving transparent gaps that read as sprocket holes.
+        A bell sits in the center frame area.
+    -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="
+            M3,2 L7,2 L7,8 L3,8 Z
+            M3,10 L7,10 L7,14 L3,14 Z
+            M3,16 L7,16 L7,22 L3,22 Z
+
+            M17,2 L21,2 L21,8 L17,8 Z
+            M17,10 L21,10 L21,14 L17,14 Z
+            M17,16 L21,16 L21,22 L17,22 Z
+
+            M7,2 L17,2 L17,4 L7,4 Z
+
+            M7,20 L17,20 L17,22 L7,22 Z
+
+            M11,6 L13,6 L13,8 L11,8 Z
+
+            M8,15 C8,9 16,9 16,15 L16,17 L8,17 Z
+
+            M10,17 C10,19 14,19 14,17 Z" />
+
+</vector>
