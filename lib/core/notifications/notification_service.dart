@@ -7,9 +7,37 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background,
-  // such as Firestore, make sure you call `initializeApp` before using other Firebase services.
-  print('=== Background Message Received: ${message.messageId} ===');
+  // Notification messages are shown automatically by the OS in background.
+  // Data-only messages must be shown manually.
+  if (message.notification != null) return;
+
+  final plugin = FlutterLocalNotificationsPlugin();
+  await plugin.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('ic_notification'),
+      iOS: DarwinInitializationSettings(),
+    ),
+  );
+
+  final title = message.data['title'] as String? ?? 'CineAlert';
+  final body = message.data['body'] as String? ?? '';
+
+  await plugin.show(
+    message.hashCode,
+    title,
+    body,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'cine_alert_channel',
+        'Lembretes',
+        channelDescription: 'Notificações de lembretes do CineAlert',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: 'ic_notification',
+      ),
+      iOS: DarwinNotificationDetails(),
+    ),
+  );
 }
 
 class NotificationService {
@@ -55,17 +83,11 @@ class NotificationService {
     // FCM Setup
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // Foreground listener
+    // Foreground listener — FCM does NOT auto-display in foreground, must be shown manually.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print(
-          '=== Foreground Message Received: ${message.notification?.title} ===');
-      if (message.notification != null) {
-        _showNotification(
-          message.notification!.hashCode,
-          message.notification!.title ?? 'CineAlert',
-          message.notification!.body ?? '',
-        );
-      }
+      final title = message.notification?.title ?? message.data['title'] as String? ?? 'CineAlert';
+      final body = message.notification?.body ?? message.data['body'] as String? ?? '';
+      _showNotification(message.hashCode, title, body);
     });
   }
 
