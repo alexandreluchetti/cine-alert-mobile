@@ -83,7 +83,7 @@ class ReminderRepository {
     return ReminderEntity(
       id: data['id'],
       content: content,
-      scheduledAt: DateTime.parse(data['scheduledAt']),
+      scheduledAt: DateTime.parse(data['scheduledAt']).toLocal(),
       recurrence: Recurrence.values.firstWhere(
         (r) => r.name.toUpperCase() == recurrenceStr,
         orElse: () => Recurrence.once,
@@ -93,7 +93,7 @@ class ReminderRepository {
         (s) => s.name.toUpperCase() == statusStr,
         orElse: () => ReminderStatus.pending,
       ),
-      createdAt: data['createdAt'] != null ? DateTime.tryParse(data['createdAt']) : null,
+      createdAt: data['createdAt'] != null ? DateTime.tryParse(data['createdAt'])?.toLocal() : null,
     );
   }
 }
