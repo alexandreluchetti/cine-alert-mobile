@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -7,6 +8,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Required in release (AOT): background handler runs in a separate isolate.
+  await Firebase.initializeApp();
+
   // Notification messages are shown automatically by the OS in background.
   // Data-only messages must be shown manually.
   if (message.notification != null) return;
