@@ -13,7 +13,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final plugin = FlutterLocalNotificationsPlugin();
   await plugin.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('ic_notification'),
       iOS: DarwinInitializationSettings(),
     ),
@@ -23,10 +23,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final body = message.data['body'] as String? ?? '';
 
   await plugin.show(
-    message.hashCode,
-    title,
-    body,
-    const NotificationDetails(
+    id: message.hashCode,
+    title: title,
+    body: body,
+    notificationDetails: const NotificationDetails(
       android: AndroidNotificationDetails(
         'cine_alert_channel',
         'Lembretes',
@@ -46,6 +46,8 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  void Function(String token)? onTokenRefresh;
 
   NotificationService._();
 
@@ -85,28 +87,41 @@ class NotificationService {
 
     // Foreground listener — FCM does NOT auto-display in foreground, must be shown manually.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('=== FCM foreground: notification=${message.notification?.title}, data=${message.data} ===');
       final title = message.notification?.title ?? message.data['title'] as String? ?? 'CineAlert';
       final body = message.notification?.body ?? message.data['body'] as String? ?? '';
       _showNotification(message.hashCode, title, body);
     });
+
+    // Keep FCM token in sync — Firebase can rotate it at any time.
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      print('=== FCM token refreshed ===');
+      onTokenRefresh?.call(newToken);
+    });
   }
 
   Future<void> _showNotification(int id, String title, String body) async {
-    await flutterLocalNotificationsPlugin.show(
-      id: id,
-      title: title,
-      body: body,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'cine_alert_channel',
-          'Lembretes',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: 'ic_notification',
+    try {
+      await flutterLocalNotificationsPlugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'cine_alert_channel',
+            'Lembretes',
+            channelDescription: 'Notificações de lembretes do CineAlert',
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: 'ic_notification',
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-    );
+      );
+      print('=== Local notification shown: $title ===');
+    } catch (e) {
+      print('=== Failed to show local notification: $e ===');
+    }
   }
 
   Future<String?> getFcmToken() async {

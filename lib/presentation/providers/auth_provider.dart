@@ -21,7 +21,11 @@ class AuthError extends AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super(AuthInitial());
+  AuthNotifier(this._repository) : super(AuthInitial()) {
+    NotificationService.instance.onTokenRefresh = (token) {
+      _repository.updateFcmToken(token);
+    };
+  }
 
   Future<bool> checkAuthentication() async {
     final isAuth = await _repository.isAuthenticated();

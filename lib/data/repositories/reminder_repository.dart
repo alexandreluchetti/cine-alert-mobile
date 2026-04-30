@@ -32,7 +32,7 @@ class ReminderRepository {
     try {
       final response = await _dio.post('/reminders', data: {
         'contentId': contentId,
-        'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+        'scheduledAt': scheduledAt.toIso8601String(),
         'recurrence': recurrence,
         if (message != null && message.isNotEmpty) 'message': message,
       });
@@ -73,17 +73,20 @@ class ReminderRepository {
       type: contentData['type'] ?? 'MOVIE',
       posterUrl: contentData['posterUrl'],
       year: contentData['year'],
-      rating: contentData['rating'] != null ? double.tryParse(contentData['rating'].toString()) : null,
+      rating: contentData['rating'] != null
+          ? double.tryParse(contentData['rating'].toString())
+          : null,
       genre: contentData['genre'],
     );
 
     final statusStr = (data['status'] as String?)?.toUpperCase() ?? 'PENDING';
-    final recurrenceStr = (data['recurrence'] as String?)?.toUpperCase() ?? 'ONCE';
+    final recurrenceStr =
+        (data['recurrence'] as String?)?.toUpperCase() ?? 'ONCE';
 
     return ReminderEntity(
       id: data['id'],
       content: content,
-      scheduledAt: DateTime.parse(data['scheduledAt']).toLocal(),
+      scheduledAt: DateTime.parse(data['scheduledAt']),
       recurrence: Recurrence.values.firstWhere(
         (r) => r.name.toUpperCase() == recurrenceStr,
         orElse: () => Recurrence.once,
@@ -93,7 +96,9 @@ class ReminderRepository {
         (s) => s.name.toUpperCase() == statusStr,
         orElse: () => ReminderStatus.pending,
       ),
-      createdAt: data['createdAt'] != null ? DateTime.tryParse(data['createdAt'])?.toLocal() : null,
+      createdAt: data['createdAt'] != null
+          ? DateTime.tryParse(data['createdAt'])
+          : null,
     );
   }
 }
