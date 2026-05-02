@@ -40,7 +40,8 @@ class MovieCard extends StatelessWidget {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(4),
@@ -89,7 +90,8 @@ class MovieCard extends StatelessWidget {
                         const SizedBox(width: 8),
                       ],
                       if (content.rating != null && content.rating! > 0) ...[
-                        const Icon(Icons.star, color: AppColors.accent, size: 12),
+                        const Icon(Icons.star,
+                            color: AppColors.accent, size: 12),
                         const SizedBox(width: 2),
                         Text(
                           content.ratingFormatted,
@@ -127,7 +129,8 @@ class MovieCard extends StatelessWidget {
     return Container(
       color: AppColors.shimmer,
       child: const Center(
-        child: Icon(Icons.movie_outlined, color: AppColors.textDisabled, size: 40),
+        child:
+            Icon(Icons.movie_outlined, color: AppColors.textDisabled, size: 40),
       ),
     );
   }
@@ -136,16 +139,19 @@ class MovieCard extends StatelessWidget {
     return Container(
       color: AppColors.surfaceVariant,
       child: const Center(
-        child: Icon(Icons.movie_outlined, color: AppColors.textDisabled, size: 40),
+        child:
+            Icon(Icons.movie_outlined, color: AppColors.textDisabled, size: 40),
       ),
     );
   }
 
   String get _typeLabel => switch (content.type) {
-    'MOVIE' => 'FILME',
-    'SERIES' => 'SÉRIE',
-    'MINI_SERIES' => 'MINI-SÉRIE',
-    'DOCUMENTARY' => 'DOC',
-    _ => 'FILME',
-  };
+        'MOVIE' => 'FILME',
+        'SERIES' => 'SÉRIE',
+        'MINI_SERIES' => 'MINI-SÉRIE',
+        'DOCUMENTARY' => 'DOC',
+        'VIDEO_GAME' => 'VIDEO-GAME',
+        'SHORT' => 'CURTA',
+        _ => 'FILME',
+      };
 }

@@ -33,4 +33,7 @@ class ContentEntity {
 
   bool get isMovie => type == 'MOVIE';
   bool get isSeries => type == 'SERIES' || type == 'MINI_SERIES';
+  bool get isDocumentary => type == 'DOCUMENTARY';
+  bool get isVideoGame => type == 'VIDEO_GAME';
+  bool get isShort => type == 'SHORT';
 }

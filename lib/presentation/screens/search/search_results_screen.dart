@@ -188,11 +188,19 @@ class _SearchResultsScreenState extends ConsumerState<SearchResultsScreen> {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: ['MOVIE', 'SERIES', 'DOCUMENTARY'].map((type) {
+                    children: [
+                      'MOVIE',
+                      'SERIES',
+                      'DOCUMENTARY',
+                      'VIDEO_GAME',
+                      'SHORT'
+                    ].map((type) {
                       final label = switch (type) {
                         'MOVIE' => 'Filme',
                         'SERIES' => 'Série',
                         'DOCUMENTARY' => 'Documentário',
+                        'VIDEO_GAME' => 'Video-Game',
+                        'SHORT' => 'Curta',
                         _ => type,
                       };
                       return FilterChip(
