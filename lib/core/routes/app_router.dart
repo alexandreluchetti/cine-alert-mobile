@@ -10,11 +10,22 @@ import '../../presentation/screens/detail/title_detail_screen.dart';
 import '../../presentation/screens/reminders/reminders_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/main/main_shell.dart';
+import '../network/session_notifier.dart';
+
+const _publicRoutes = ['/splash', '/login', '/register'];
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: false,
+    refreshListenable: SessionNotifier.instance,
+    redirect: (context, state) {
+      if (SessionNotifier.instance.isSessionExpired &&
+          !_publicRoutes.contains(state.matchedLocation)) {
+        return '/login';
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/splash',

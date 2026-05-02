@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/auth_entity.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../core/notifications/notification_service.dart';
+import '../../core/network/session_notifier.dart';
 
 // Auth state
 sealed class AuthState {}
@@ -43,6 +44,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final auth = await _repository.login(email, password);
       state = AuthAuthenticated(auth);
+      SessionNotifier.instance.reset();
       _syncFcmToken();
       return true;
     } catch (e) {
@@ -56,6 +58,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final auth = await _repository.register(name, email, password);
       state = AuthAuthenticated(auth);
+      SessionNotifier.instance.reset();
       _syncFcmToken();
       return true;
     } catch (e) {

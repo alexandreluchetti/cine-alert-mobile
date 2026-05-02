@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
+import 'session_notifier.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
@@ -65,10 +66,14 @@ class AuthInterceptor extends Interceptor {
             return;
           }
         }
+
+        // Refresh token ausente, inválido ou sem novo accessToken — sessão encerrada
+        await prefs.clear();
+        SessionNotifier.instance.expire();
       } catch (_) {
-        // Clear tokens on failure
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
+        SessionNotifier.instance.expire();
       } finally {
         _isRefreshing = false;
       }
