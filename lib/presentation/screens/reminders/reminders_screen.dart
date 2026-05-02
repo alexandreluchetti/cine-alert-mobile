@@ -116,11 +116,24 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: reminders.length,
         separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
+        itemBuilder: (_, index) {
           final reminder = reminders[index];
           return _ReminderCard(
             reminder: reminder,
-            onDelete: () => _confirmDelete(context, reminder),
+            onConfirmDelete: () async {
+              final success = await ref
+                  .read(reminderProvider.notifier)
+                  .cancelReminder(reminder.id);
+              if (success && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lembrete cancelado'),
+                    backgroundColor: AppColors.warning,
+                  ),
+                );
+              }
+              return success;
+            },
           );
         },
       ),
@@ -160,48 +173,20 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
     );
   }
 
-  Future<void> _confirmDelete(
-      BuildContext context, ReminderEntity reminder) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Cancelar lembrete'),
-        content:
-            Text('Deseja cancelar o lembrete de "${reminder.content.title}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Não')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await ref.read(reminderProvider.notifier).cancelReminder(reminder.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Lembrete cancelado'),
-              backgroundColor: AppColors.warning),
-        );
-      }
-    }
-  }
 }
 
 class _ReminderCard extends StatelessWidget {
   final ReminderEntity reminder;
-  final VoidCallback onDelete;
 
-  const _ReminderCard({required this.reminder, required this.onDelete});
+  /// Executado quando o usuário confirma a exclusão.
+  /// Retorna [true] se o lembrete foi deletado com sucesso
+  /// (o Dismissible remove o item da lista), [false] caso contrário.
+  final Future<bool> Function() onConfirmDelete;
+
+  const _ReminderCard({
+    required this.reminder,
+    required this.onConfirmDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -213,8 +198,37 @@ class _ReminderCard extends StatelessWidget {
           ? DismissDirection.endToStart
           : DismissDirection.none,
       confirmDismiss: (_) async {
-        onDelete();
-        return false;
+        // Usa o context estável do _ReminderCard.build para showDialog.
+        // Usa dialogCtx (context do builder do diálogo) para Navigator.pop,
+        // evitando pop acidental da rota de Lembretes.
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            title: const Text('Cancelar lembrete'),
+            content: Text(
+              'Deseja cancelar o lembrete de "${reminder.content.title}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx, false),
+                child: const Text('Não'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogCtx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirm != true) return false;
+
+        // Awaita a deleção; retorna true para o Dismissible remover o item.
+        return onConfirmDelete();
       },
       background: Container(
         decoration: BoxDecoration(
