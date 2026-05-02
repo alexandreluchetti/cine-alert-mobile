@@ -78,22 +78,16 @@ class _ScheduleReminderSheetState extends ConsumerState<ScheduleReminderSheet> {
       return;
     }
 
-    if (widget.content.id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Conteúdo sem ID, não é possível criar o lembrete'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
     setState(() => _saving = true);
 
     final recurrenceStr = _recurrence.name.toUpperCase();
 
+    // Usa o UUID interno quando disponível; cai para imdbId caso o endpoint
+    // de detalhe não retorne um id interno (conteúdo ainda não persistido no DB).
+    final contentId = widget.content.id ?? widget.content.imdbId;
+
     final success = await ref.read(reminderProvider.notifier).createReminder(
-      contentId: widget.content.id!,
+      contentId: contentId,
       scheduledAt: _combinedDateTime,
       recurrence: recurrenceStr,
       message: _messageCtrl.text.trim().isEmpty ? null : _messageCtrl.text.trim(),
