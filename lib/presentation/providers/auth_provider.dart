@@ -29,14 +29,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> checkAuthentication() async {
-    final isAuth = await _repository.isAuthenticated();
-    if (!isAuth) {
+    final storedAuth = await _repository.getStoredAuth();
+    if (storedAuth == null) {
       state = AuthUnauthenticated();
-    } else {
-      // Se autenticado no início, tenta sincronizar o token FCM
-      _syncFcmToken();
+      return false;
     }
-    return isAuth;
+    // Restaura o estado autenticado com os dados do usuário persistidos,
+    // para que as telas (ex.: Perfil) exibam as informações corretas.
+    state = AuthAuthenticated(storedAuth);
+    _syncFcmToken();
+    return true;
   }
 
   Future<bool> login(String email, String password) async {

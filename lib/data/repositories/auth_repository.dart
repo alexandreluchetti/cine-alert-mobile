@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/dio_client.dart';
@@ -50,6 +52,7 @@ class AuthRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.accessTokenKey);
     await prefs.remove(AppConstants.refreshTokenKey);
+    await prefs.remove(AppConstants.userKey);
   }
 
   Future<void> forgotPassword(String email) async {
@@ -75,10 +78,50 @@ class AuthRepository {
     return token != null;
   }
 
+  /// Reconstrói o [AuthEntity] a partir do que foi persistido localmente.
+  /// Retorna null se os dados estiverem incompletos ou ausentes.
+  Future<AuthEntity?> getStoredAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString(AppConstants.accessTokenKey);
+    final refreshToken = prefs.getString(AppConstants.refreshTokenKey);
+    final userJson = prefs.getString(AppConstants.userKey);
+
+    if (accessToken == null || refreshToken == null || userJson == null) {
+      return null;
+    }
+
+    try {
+      final userMap = jsonDecode(userJson) as Map<String, dynamic>;
+      return AuthEntity(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        tokenType: 'Bearer',
+        expiresIn: 0,
+        user: UserInfo(
+          id: userMap['id'] as String,
+          name: userMap['name'] as String,
+          email: userMap['email'] as String,
+          avatarUrl: userMap['avatarUrl'] as String?,
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _saveTokens(AuthEntity entity) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.accessTokenKey, entity.accessToken);
     await prefs.setString(AppConstants.refreshTokenKey, entity.refreshToken);
+    await prefs.setString(
+      AppConstants.userKey,
+      jsonEncode({
+        'id': entity.user.id,
+        'name': entity.user.name,
+        'email': entity.user.email,
+        'avatarUrl': entity.user.avatarUrl,
+      }),
+    );
   }
 
   AuthEntity _parseAuth(Map<String, dynamic> data) {
