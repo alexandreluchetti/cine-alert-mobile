@@ -32,7 +32,7 @@ class ReminderRepository {
     try {
       final response = await _dio.post('/reminders', data: {
         'contentId': contentId,
-        'scheduledAt': scheduledAt.toIso8601String(),
+        'scheduledAt': _toIso8601WithOffset(scheduledAt),
         'recurrence': recurrence,
         if (message != null && message.isNotEmpty) 'message': message,
       });
@@ -64,6 +64,18 @@ class ReminderRepository {
     }
   }
 
+  /// Serializa um DateTime com o offset local do dispositivo.
+  /// Exemplo (BRT, UTC-3): "2026-05-10T17:00:00-03:00"
+  String _toIso8601WithOffset(DateTime dt) {
+    final local = dt.isUtc ? dt.toLocal() : dt;
+    final offset = local.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final h = offset.inHours.abs().toString().padLeft(2, '0');
+    final m = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    final base = local.toIso8601String().split('.').first;
+    return '$base$sign$h:$m';
+  }
+
   ReminderEntity _parseReminder(Map<String, dynamic> data) {
     final contentData = data['content'] as Map<String, dynamic>;
     final content = ContentEntity(
@@ -86,7 +98,7 @@ class ReminderRepository {
     return ReminderEntity(
       id: data['id'],
       content: content,
-      scheduledAt: DateTime.parse(data['scheduledAt']),
+      scheduledAt: DateTime.parse(data['scheduledAt']).toLocal(),
       recurrence: Recurrence.values.firstWhere(
         (r) => r.name.toUpperCase() == recurrenceStr,
         orElse: () => Recurrence.once,
@@ -97,7 +109,7 @@ class ReminderRepository {
         orElse: () => ReminderStatus.pending,
       ),
       createdAt: data['createdAt'] != null
-          ? DateTime.tryParse(data['createdAt'])
+          ? DateTime.tryParse(data['createdAt'])?.toLocal()
           : null,
     );
   }
