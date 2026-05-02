@@ -15,7 +15,7 @@ class RemindersScreen extends ConsumerStatefulWidget {
 }
 
 class _RemindersScreenState extends ConsumerState<RemindersScreen> {
-  ReminderStatus? _filterStatus;
+  ReminderStatus? _filterStatus = ReminderStatus.pending;
 
   @override
   void initState() {
@@ -72,8 +72,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
 
   Widget _buildFilterChips() {
     const options = [
-      (null, 'Todos'),
       (ReminderStatus.pending, 'Pendentes'),
+      (null, 'Todos'),
       (ReminderStatus.sent, 'Enviados'),
       (ReminderStatus.cancelled, 'Cancelados'),
     ];
@@ -172,7 +172,6 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
       ),
     );
   }
-
 }
 
 class _ReminderCard extends StatelessWidget {
