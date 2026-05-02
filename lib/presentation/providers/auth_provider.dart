@@ -80,6 +80,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> updateName(String name) async {
+    final current = state;
+    if (current is! AuthAuthenticated) return false;
+    try {
+      await _repository.updateProfile(name: name);
+      // Atualiza o state com o novo nome sem recriar tokens.
+      state = AuthAuthenticated(
+        AuthEntity(
+          accessToken: current.auth.accessToken,
+          refreshToken: current.auth.refreshToken,
+          tokenType: current.auth.tokenType,
+          expiresIn: current.auth.expiresIn,
+          user: UserInfo(
+            id: current.auth.user.id,
+            name: name,
+            email: current.auth.user.email,
+            avatarUrl: current.auth.user.avatarUrl,
+          ),
+        ),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = AuthUnauthenticated();

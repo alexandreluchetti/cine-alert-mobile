@@ -72,6 +72,23 @@ class AuthRepository {
     }
   }
 
+  Future<void> updateProfile({required String name}) async {
+    try {
+      await _dio.put('/users/me', data: {'name': name});
+      // Persiste o nome atualizado localmente para restaurar corretamente
+      // em checkAuthentication() sem depender de uma nova chamada de login.
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString(AppConstants.userKey);
+      if (userJson != null) {
+        final userMap = jsonDecode(userJson) as Map<String, dynamic>;
+        userMap['name'] = name;
+        await prefs.setString(AppConstants.userKey, jsonEncode(userMap));
+      }
+    } on DioException catch (e) {
+      throw AppException.fromDioError(e);
+    }
+  }
+
   Future<bool> isAuthenticated() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(AppConstants.accessTokenKey);

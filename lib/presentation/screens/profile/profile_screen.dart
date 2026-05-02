@@ -173,22 +173,40 @@ class ProfileScreen extends ConsumerWidget {
     final nameCtrl = TextEditingController(text: currentName);
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Editar perfil'),
         content: TextField(
           controller: nameCtrl,
           decoration: const InputDecoration(labelText: 'Nome'),
+          textCapitalization: TextCapitalization.words,
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Perfil atualizado!')),
-              );
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              // Fecha o diálogo antes da chamada async para evitar
+              // uso de dialogCtx após gap assíncrono.
+              Navigator.pop(dialogCtx);
+              if (name.isEmpty || name == currentName) return;
+              final success =
+                  await ref.read(authProvider.notifier).updateName(name);
+              // context pertence ao ProfileScreen (ainda na árvore).
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Perfil atualizado!')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Erro ao atualizar perfil. Tente novamente.'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
             },
             child: const Text('Salvar'),
           ),
