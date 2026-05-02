@@ -9,7 +9,7 @@
 
 Aplicativo Flutter para **agendamento de lembretes de filmes e séries**. O usuário descobre conteúdo, agenda um lembrete com data/hora e recebe uma notificação local ou push quando chegar a hora. Idioma: **português (pt_BR)**. Tema: **escuro exclusivo**.
 
-- **App:** `cine_alert` · versão atual `1.0.3+4`
+- **App:** `cine_alert` · versão atual `1.0.4+5`
 - **SDK Flutter:** `>=3.2.0 <4.0.0`
 - **Backend:** API REST hospedada na AWS → `https://api.cinealert.link`
 - **Repositório:** `alexandreluchetti/cine-alert-mobile`
@@ -179,6 +179,83 @@ O GoRouter usa `refreshListenable: Listenable.merge([SessionNotifier.instance, A
 
 ---
 
+## Cancelamento de requisições HTTP (CancelToken)
+
+Todos os métodos de repositório que fazem chamadas lentas (ex.: buscam no IMDB via backend) aceitam um parâmetro opcional `CancelToken? cancelToken` do Dio. Isso permite cancelar o request quando a tela é destruída, evitando erros desnecessários no backend (`ClientAbortException`) e na UI.
+
+### Repositórios com suporte a cancelamento
+
+| Método | Arquivo |
+|---|---|
+| `ContentRepository.search(...)` | `content_repository.dart` |
+| `ContentRepository.getDetail(...)` | `content_repository.dart` |
+| `ContentRepository.getTrending()` | `content_repository.dart` |
+| `ReminderRepository.getReminders(...)` | `reminder_repository.dart` |
+| `ReminderRepository.createReminder(...)` | `reminder_repository.dart` |
+
+### Padrão nos providers / notifiers
+
+**`FutureProvider`** — usar `ref.onDispose` para cancelar ao descartar:
+```dart
+final myProvider = FutureProvider.autoDispose((ref) async {
+  final cancelToken = CancelToken();
+  ref.onDispose(cancelToken.cancel);
+  return ref.watch(myRepositoryProvider).myMethod(cancelToken: cancelToken);
+});
+```
+
+**`StateNotifier`** — substituir o token a cada nova carga e cancelar no `dispose()`:
+```dart
+CancelToken _cancelToken = CancelToken();
+
+Future<void> load() async {
+  _cancelToken.cancel();        // cancela carga anterior
+  _cancelToken = CancelToken(); // novo token para esta carga
+  try {
+    final data = await _repository.getData(cancelToken: _cancelToken);
+    state = AsyncValue.data(data);
+  } catch (e, st) {
+    if (e is AppException && e.isCancelled) return; // saída silenciosa
+    state = AsyncValue.error(e, st);
+  }
+}
+
+@override
+void dispose() {
+  _cancelToken.cancel();
+  super.dispose();
+}
+```
+
+### `AppException.isCancelled`
+
+`AppException.fromDioError` detecta `DioExceptionType.cancel` e retorna `AppException('cancelled')`. O getter `isCancelled` permite identificar o cancelamento sem comparar strings:
+
+```dart
+if (e is AppException && e.isCancelled) return; // não exibir erro na UI
+```
+
+> **`contentDetailProvider`** é `FutureProvider.autoDispose.family` — descartado automaticamente quando `TitleDetailScreen` sai da árvore, cancelando a requisição em andamento.
+
+> **Nunca** converter providers de detalhe de volta para não-`autoDispose` — isso manteria todas as telas de detalhe em memória indefinidamente.
+
+---
+
+## `ContentEntity.id` — identificador interno vs. `imdbId`
+
+`ContentEntity.id` é `String?` (nullable). O campo `id` representa o UUID interno do banco de dados do backend, que **nem sempre é retornado** — especialmente em endpoints de busca/detalhe que atuam como proxy para o IMDB API sem persistir o conteúdo localmente.
+
+O `imdbId` é o identificador universal garantido em toda resposta (`String` não-nullable).
+
+**Regra ao passar `contentId` para `POST /api/reminders`:**
+```dart
+final contentId = content.id ?? content.imdbId; // nunca usar content.id! diretamente
+```
+
+> **Nunca** usar `content.id!` sem verificação — resultará em erro se o backend não retornar o UUID interno.
+
+---
+
 ## Diálogos — regras de contexto
 
 Padrão obrigatório em todos os `AlertDialog` do projeto:
@@ -232,6 +309,23 @@ O backend devolve `scheduledAt` com offset (ex: `"2026-05-10T17:00:00-03:00"`).
 ---
 
 ## Histórico de alterações recentes
+
+### v1.0.4+5
+
+**Cancelamento de requisições HTTP ao sair da tela (`dio_client.dart`, `content_repository.dart`, `reminder_repository.dart`, `content_provider.dart`, `reminder_provider.dart`)**
+- `AppException.fromDioError`: detecta `DioExceptionType.cancel` antes de qualquer outro tratamento → retorna `AppException('cancelled')`; novo getter `isCancelled` para identificação limpa nos callers
+- `ContentRepository`: adicionado `CancelToken? cancelToken` em `search`, `getDetail` e `getTrending`
+- `ReminderRepository`: adicionado `CancelToken? cancelToken` em `getReminders` e `createReminder`
+- `contentDetailProvider`: convertido para `FutureProvider.autoDispose.family` + `ref.onDispose(cancelToken.cancel)` — descartado automaticamente quando `TitleDetailScreen` sai da árvore
+- `trendingProvider` e `genresProvider`: adicionados `CancelToken` + `ref.onDispose`
+- `SearchNotifier`: `_cancelToken` substituído a cada `search()` (cancela busca anterior); `dispose()` cancela token ativo; erros `isCancelled` saem silenciosamente
+- `ReminderNotifier`: `_cancelToken` substituído a cada `loadReminders()` (evita race condition ao trocar filtro); `dispose()` cancela token ativo; erros `isCancelled` saem silenciosamente
+
+**Criação de lembrete via busca — erro "Conteúdo sem ID" (`schedule_reminder_sheet.dart`)**
+- Removido o guard `if (widget.content.id == null)` que bloqueava a criação com mensagem de erro
+- `contentId` agora usa `content.id ?? content.imdbId` — garante que sempre há um identificador válido independente do endpoint retornar o UUID interno ou não
+
+---
 
 ### v1.0.3+4
 
