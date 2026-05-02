@@ -10,8 +10,8 @@ Aplicativo mobile para descoberta e gerenciamento de lembretes de filmes e séri
 - **Descoberta de conteúdo** — Trending de filmes e séries com filtros por gênero
 - **Busca avançada** — Filtros por tipo (filme/série), ano e gênero
 - **Detalhes** — Sinopse, avaliação, trailer e informações completas do título
-- **Lembretes** — Agendamento com recorrência (única, diária, semanal) e mensagem personalizada
-- **Notificações** — Push via Firebase Cloud Messaging + notificações locais com suporte a fuso horário
+- **Lembretes** — Agendamento com recorrência (única, diária, semanal) e mensagem personalizada; horários sempre no fuso horário do dispositivo (ISO 8601 com offset)
+- **Notificações** — Push via Firebase Cloud Messaging + notificações locais; funciona nos três estados do app (foreground, background e fechado)
 - **Perfil** — Estatísticas de lembretes e gerenciamento de conta
 - **Tema escuro** — Interface escura com acento dourado (`#F5C518`)
 
@@ -138,6 +138,8 @@ A aplicação consome a API REST `https://api.cinealert.link/api`. Endpoints pri
 | Lembretes | `GET /reminders`, `POST /reminders`, `DELETE /reminders/:id` |
 
 Todas as requisições autenticadas enviam `Authorization: Bearer <token>`. Em caso de 401, o cliente tenta refresh automático e, em falha, limpa a sessão.
+
+O campo `scheduledAt` nos lembretes usa ISO 8601 com offset do dispositivo (ex: `2026-05-10T17:00:00-03:00`). O backend extrai o timezone do próprio valor recebido.
 
 ---
 
