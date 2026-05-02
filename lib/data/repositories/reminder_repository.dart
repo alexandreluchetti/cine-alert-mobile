@@ -13,10 +13,17 @@ class ReminderRepository {
 
   ReminderRepository(this._dio);
 
-  Future<List<ReminderEntity>> getReminders({String? status}) async {
+  Future<List<ReminderEntity>> getReminders({
+    String? status,
+    CancelToken? cancelToken,
+  }) async {
     try {
       final params = status != null ? {'status': status} : null;
-      final response = await _dio.get('/reminders', queryParameters: params);
+      final response = await _dio.get(
+        '/reminders',
+        queryParameters: params,
+        cancelToken: cancelToken,
+      );
       return (response.data as List).map((e) => _parseReminder(e)).toList();
     } on DioException catch (e) {
       throw AppException.fromDioError(e);
@@ -28,14 +35,19 @@ class ReminderRepository {
     required DateTime scheduledAt,
     required String recurrence,
     String? message,
+    CancelToken? cancelToken,
   }) async {
     try {
-      final response = await _dio.post('/reminders', data: {
-        'contentId': contentId,
-        'scheduledAt': _toIso8601WithOffset(scheduledAt),
-        'recurrence': recurrence,
-        if (message != null && message.isNotEmpty) 'message': message,
-      });
+      final response = await _dio.post(
+        '/reminders',
+        data: {
+          'contentId': contentId,
+          'scheduledAt': _toIso8601WithOffset(scheduledAt),
+          'recurrence': recurrence,
+          if (message != null && message.isNotEmpty) 'message': message,
+        },
+        cancelToken: cancelToken,
+      );
       return _parseReminder(response.data);
     } on DioException catch (e) {
       throw AppException.fromDioError(e);

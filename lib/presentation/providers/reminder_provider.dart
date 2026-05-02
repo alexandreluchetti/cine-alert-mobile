@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/dio_client.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../domain/entities/reminder_entity.dart';
 import '../../data/repositories/reminder_repository.dart';
@@ -6,15 +8,27 @@ import '../../data/repositories/reminder_repository.dart';
 class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
   final ReminderRepository _repository;
 
+  // Token reutilizável: substituído a cada loadReminders para cancelar a carga anterior.
+  CancelToken _cancelToken = CancelToken();
+
   ReminderNotifier(this._repository) : super(const AsyncValue.loading());
 
   Future<void> loadReminders({ReminderStatus? status}) async {
+    // Cancela requisição anterior antes de iniciar a nova.
+    _cancelToken.cancel();
+    _cancelToken = CancelToken();
+
     state = const AsyncValue.loading();
     try {
       final statusStr = status?.name.toUpperCase();
-      final reminders = await _repository.getReminders(status: statusStr);
+      final reminders = await _repository.getReminders(
+        status: statusStr,
+        cancelToken: _cancelToken,
+      );
       state = AsyncValue.data(reminders);
     } catch (e, st) {
+      // Cancelamento intencional — sai silenciosamente sem alterar a UI.
+      if (e is AppException && e.isCancelled) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -45,6 +59,7 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
       await loadReminders();
       return true;
     } catch (e) {
+      if (e is AppException && e.isCancelled) return false;
       return false;
     }
   }
@@ -58,6 +73,12 @@ class ReminderNotifier extends StateNotifier<AsyncValue<List<ReminderEntity>>> {
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  void dispose() {
+    _cancelToken.cancel();
+    super.dispose();
   }
 }
 

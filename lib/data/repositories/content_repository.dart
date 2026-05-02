@@ -18,6 +18,7 @@ class ContentRepository {
     String? genre,
     int? year,
     double? minRating,
+    CancelToken? cancelToken,
   }) async {
     try {
       final params = <String, dynamic>{'q': query};
@@ -26,26 +27,38 @@ class ContentRepository {
       if (year != null) params['year'] = year;
       if (minRating != null) params['rating'] = minRating;
 
-      final response =
-          await _dio.get('/content/search', queryParameters: params);
+      final response = await _dio.get(
+        '/content/search',
+        queryParameters: params,
+        cancelToken: cancelToken,
+      );
       return (response.data as List).map((e) => _parseContent(e)).toList();
     } on DioException catch (e) {
       throw AppException.fromDioError(e);
     }
   }
 
-  Future<ContentEntity> getDetail(String imdbId) async {
+  Future<ContentEntity> getDetail(
+    String imdbId, {
+    CancelToken? cancelToken,
+  }) async {
     try {
-      final response = await _dio.get('/content/$imdbId');
+      final response = await _dio.get(
+        '/content/$imdbId',
+        cancelToken: cancelToken,
+      );
       return _parseContent(response.data);
     } on DioException catch (e) {
       throw AppException.fromDioError(e);
     }
   }
 
-  Future<List<ContentEntity>> getTrending() async {
+  Future<List<ContentEntity>> getTrending({CancelToken? cancelToken}) async {
     try {
-      final response = await _dio.get('/content/trending/movies');
+      final response = await _dio.get(
+        '/content/trending/movies',
+        cancelToken: cancelToken,
+      );
       return (response.data as List).map((e) => _parseContent(e)).toList();
     } on DioException catch (e) {
       throw AppException.fromDioError(e);

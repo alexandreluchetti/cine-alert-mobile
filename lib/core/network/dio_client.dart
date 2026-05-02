@@ -143,7 +143,14 @@ class AppException implements Exception {
 
   AppException(this.message, {this.statusCode});
 
+  /// Retorna true quando a requisição foi cancelada intencionalmente
+  /// via CancelToken. Não deve ser exibido como erro na UI.
+  bool get isCancelled => message == 'cancelled';
+
   factory AppException.fromDioError(DioException e) {
+    if (e.type == DioExceptionType.cancel) {
+      return AppException('cancelled');
+    }
     final data = e.response?.data;
     final message = data is Map ? (data['message'] ?? 'An error occurred') : 'An error occurred';
     return AppException(message.toString(), statusCode: e.response?.statusCode);
