@@ -32,11 +32,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final storedAuth = await _repository.getStoredAuth();
     if (storedAuth == null) {
       state = AuthUnauthenticated();
+      AuthStateNotifier.instance.setAuthenticated(false);
       return false;
     }
     // Restaura o estado autenticado com os dados do usuário persistidos,
     // para que as telas (ex.: Perfil) exibam as informações corretas.
     state = AuthAuthenticated(storedAuth);
+    AuthStateNotifier.instance.setAuthenticated(true);
     _syncFcmToken();
     return true;
   }
@@ -47,6 +49,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final auth = await _repository.login(email, password);
       state = AuthAuthenticated(auth);
       SessionNotifier.instance.reset();
+      AuthStateNotifier.instance.setAuthenticated(true);
       _syncFcmToken();
       return true;
     } catch (e) {
@@ -61,6 +64,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final auth = await _repository.register(name, email, password);
       state = AuthAuthenticated(auth);
       SessionNotifier.instance.reset();
+      AuthStateNotifier.instance.setAuthenticated(true);
       _syncFcmToken();
       return true;
     } catch (e) {
@@ -79,6 +83,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _repository.logout();
     state = AuthUnauthenticated();
+    // Dispara o redirect do GoRouter sem depender do BuildContext da tela.
+    AuthStateNotifier.instance.setAuthenticated(false);
   }
 
   void clearError() {

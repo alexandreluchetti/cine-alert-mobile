@@ -138,23 +138,25 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (_) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Sair'),
                   content: const Text('Tem certeza que deseja sair da conta?'),
                   actions: [
                     TextButton(
-                        onPressed: () => Navigator.pop(context, false),
+                        onPressed: () => Navigator.pop(dialogContext, false),
                         child: const Text('Não')),
                     ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => Navigator.pop(dialogContext, true),
                       child: const Text('Sair'),
                     ),
                   ],
                 ),
               );
-              if (confirm == true && context.mounted) {
+              if (confirm == true) {
+                // logout() chama AuthStateNotifier.setAuthenticated(false),
+                // que dispara o redirect do GoRouter para /login
+                // sem depender do BuildContext após o gap async.
                 await ref.read(authProvider.notifier).logout();
-                context.goNamed('login');
               }
             },
             color: AppColors.error,

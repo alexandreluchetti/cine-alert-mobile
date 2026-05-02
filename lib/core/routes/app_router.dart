@@ -18,10 +18,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     debugLogDiagnostics: false,
-    refreshListenable: SessionNotifier.instance,
+    // Escuta tanto expiração de sessão quanto mudanças de login/logout.
+    refreshListenable: Listenable.merge([
+      SessionNotifier.instance,
+      AuthStateNotifier.instance,
+    ]),
     redirect: (context, state) {
-      if (SessionNotifier.instance.isSessionExpired &&
-          !_publicRoutes.contains(state.matchedLocation)) {
+      final isExpired = SessionNotifier.instance.isSessionExpired;
+      final isAuthenticated = AuthStateNotifier.instance.isAuthenticated;
+      final isPublic = _publicRoutes.contains(state.matchedLocation);
+
+      // Redireciona para login se não autenticado ou com sessão expirada,
+      // exceto em rotas públicas (splash, login, register).
+      if ((!isAuthenticated || isExpired) && !isPublic) {
         return '/login';
       }
       return null;
