@@ -60,8 +60,10 @@ class AuthInterceptor extends Interceptor {
     final path   = err.requestOptions.path;
     print('=== AuthInterceptor.onError: status=$status type=${err.type.name} path=$path ===');
 
-    // Só trata 401. Requisições já marcadas como retry não entram no loop.
-    if (status != 401 || err.requestOptions.extra['_authRetry'] == true) {
+    // Trata 401 (não autenticado) e 403 (token expirado/inválido retornado pelo
+    // backend como Forbidden). Requisições já marcadas como retry não reentram.
+    final isAuthError = status == 401 || status == 403;
+    if (!isAuthError || err.requestOptions.extra['_authRetry'] == true) {
       handler.next(err);
       return;
     }
@@ -177,11 +179,12 @@ class AppException implements Exception {
       return AppException(label, statusCode: null);
     }
 
-    final data = e.response?.data;
+    final status = e.response?.statusCode;
+    final data   = e.response?.data;
     final message = data is Map
         ? (data['message'] ?? data['error'] ?? 'Erro no servidor')
         : 'Erro no servidor';
-    return AppException(message.toString(), statusCode: e.response?.statusCode);
+    return AppException(message.toString(), statusCode: status);
   }
 
   @override
