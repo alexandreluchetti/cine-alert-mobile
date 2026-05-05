@@ -35,11 +35,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       AuthStateNotifier.instance.setAuthenticated(false);
       return false;
     }
-    // Restaura o estado autenticado com os dados do usuário persistidos,
-    // para que as telas (ex.: Perfil) exibam as informações corretas.
     state = AuthAuthenticated(storedAuth);
     AuthStateNotifier.instance.setAuthenticated(true);
-    _syncFcmToken();
+    await _syncFcmToken();
     return true;
   }
 
@@ -50,7 +48,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthAuthenticated(auth);
       SessionNotifier.instance.reset();
       AuthStateNotifier.instance.setAuthenticated(true);
-      _syncFcmToken();
+      await _syncFcmToken();
       return true;
     } catch (e) {
       state = AuthError(e.toString());
@@ -65,7 +63,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthAuthenticated(auth);
       SessionNotifier.instance.reset();
       AuthStateNotifier.instance.setAuthenticated(true);
-      _syncFcmToken();
+      await _syncFcmToken();
       return true;
     } catch (e) {
       state = AuthError(e.toString());
@@ -77,6 +75,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final token = await NotificationService.instance.getFcmToken();
     if (token != null) {
       await _repository.updateFcmToken(token);
+      print('=== FCM token synced ===');
+    } else {
+      print('=== FCM token sync skipped: token null ===');
     }
   }
 
