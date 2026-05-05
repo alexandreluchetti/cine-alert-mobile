@@ -37,7 +37,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
     state = AuthAuthenticated(storedAuth);
     AuthStateNotifier.instance.setAuthenticated(true);
-    await _syncFcmToken();
+    // Fire-and-forget: o AuthInterceptor garante o refresh do access token
+    // automaticamente no primeiro 401. Awaitar aqui bloquearia o cold start
+    // na splash (getToken() faz requisição de rede) e poderia deixar o
+    // _refreshCompleter em estado intermediário ao iniciar os providers.
+    _syncFcmToken();
     return true;
   }
 
@@ -122,3 +126,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.watch(authRepositoryProvider));
 });
+
+/// Contador incrementado pelo MainShell sempre que o app volta ao foreground
+/// após um período prolongado em background (≥5 min). As telas escutam este
+/// provider via [ref.listen] para recarregar seus dados sem precisar de
+/// lifecycle observers individuais.
+final sessionRefreshProvider = StateProvider<int>((_) => 0);

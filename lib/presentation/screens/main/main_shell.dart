@@ -1,20 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/content_provider.dart';
+import '../../providers/reminder_provider.dart';
 
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const MainShell({super.key, required this.child});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
+  /// Momento em que o app foi para background. Usado para calcular se o tempo
+  /// em background ultrapassou o limiar e se é necessário atualizar os dados.
+  DateTime? _pausedAt;
+
+  /// Tempo mínimo em background para disparar a atualização dos providers.
+  static const _refreshThreshold = Duration(minutes: 5);
+
   static const _routeNames = ['home', 'search', 'reminders', 'profile'];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+        // Registra o momento em que o app foi para background.
+        // Não usar AppLifecycleState.inactive: ele dispara tanto ao entrar
+        // em background quanto ao voltar ao foreground (em iOS e alguns
+        // Android), o que zeraria _pausedAt exatamente antes de resumed.
+        _pausedAt = DateTime.now();
+
+      case AppLifecycleState.resumed:
+        final paused = _pausedAt;
+        if (paused != null &&
+            DateTime.now().difference(paused) >= _refreshThreshold) {
+          _onSessionRefresh();
+        }
+
+      default:
+        break;
+    }
+  }
+
+  /// Invalida os FutureProviders globais e emite o sinal de refresh para que
+  /// as telas com estado próprio (ex.: RemindersScreen) possam se atualizar.
+  void _onSessionRefresh() {
+    ref.invalidate(trendingProvider);
+    ref.invalidate(genresProvider);
+    ref.invalidate(reminderStatsProvider);
+    ref.read(sessionRefreshProvider.notifier).state++;
+  }
 
   void _onTap(int index) {
     setState(() => _selectedIndex = index);

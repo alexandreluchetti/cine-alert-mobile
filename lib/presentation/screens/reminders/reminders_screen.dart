@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/entities/reminder_entity.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/reminder_provider.dart';
 import '../../widgets/status_badge.dart';
 
@@ -32,6 +33,12 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Recarrega com o filtro ativo sempre que MainShell emitir o sinal de
+    // refresh (app voltou ao foreground após ≥5 min em background).
+    ref.listen<int>(sessionRefreshProvider, (_, __) {
+      ref.read(reminderProvider.notifier).loadReminders(status: _filterStatus);
+    });
+
     final remindersAsync = ref.watch(reminderProvider);
 
     return Scaffold(
@@ -43,25 +50,42 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
           child: _buildFilterChips(),
         ),
       ),
-      body: remindersAsync.when(
-        data: (reminders) {
-          if (reminders.isEmpty) return _buildEmpty(context);
-          return _buildList(reminders);
-        },
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.accent)),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: RefreshIndicator(
+        color: AppColors.accent,
+        backgroundColor: AppColors.surface,
+        onRefresh: () => ref
+            .read(reminderProvider.notifier)
+            .loadReminders(status: _filterStatus),
+        child: remindersAsync.when(
+          data: (reminders) {
+            if (reminders.isEmpty) return _buildEmpty(context);
+            return _buildList(reminders);
+          },
+          loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.accent)),
+          error: (e, _) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              const Icon(Icons.error_outline, color: AppColors.error, size: 48),
-              const SizedBox(height: 12),
-              Text(e.toString(),
-                  style: const TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => _applyFilter(_filterStatus),
-                child: const Text('Tentar novamente'),
+              SizedBox(
+                height: 400,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: AppColors.error, size: 48),
+                      const SizedBox(height: 12),
+                      Text(e.toString(),
+                          style: const TextStyle(
+                              color: AppColors.textSecondary)),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => _applyFilter(_filterStatus),
+                        child: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -106,17 +130,12 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
   }
 
   Widget _buildList(List<ReminderEntity> reminders) {
-    return RefreshIndicator(
-      color: AppColors.accent,
-      backgroundColor: AppColors.surface,
-      onRefresh: () => ref
-          .read(reminderProvider.notifier)
-          .loadReminders(status: _filterStatus),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: reminders.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (_, index) {
+    return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      itemCount: reminders.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, index) {
           final reminder = reminders[index];
           return _ReminderCard(
             reminder: reminder,
@@ -136,15 +155,19 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
             },
           );
         },
-      ),
     );
   }
 
   Widget _buildEmpty(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: constraints.maxHeight,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
           Container(
             width: 80,
             height: 80,
@@ -168,7 +191,10 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
             'Busque um filme e agende um lembrete!',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
-        ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

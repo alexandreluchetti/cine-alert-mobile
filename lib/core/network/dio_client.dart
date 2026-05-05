@@ -45,6 +45,8 @@ class AuthInterceptor extends Interceptor {
     final token = prefs.getString(AppConstants.accessTokenKey);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    } else {
+      print('=== AuthInterceptor: sem token para ${options.path} ===');
     }
     handler.next(options);
   }
@@ -54,15 +56,19 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    final status = err.response?.statusCode;
+    final path   = err.requestOptions.path;
+    print('=== AuthInterceptor.onError: status=$status type=${err.type.name} path=$path ===');
+
     // Só trata 401. Requisições já marcadas como retry não entram no loop.
-    if (err.response?.statusCode != 401 ||
-        err.requestOptions.extra['_authRetry'] == true) {
+    if (status != 401 || err.requestOptions.extra['_authRetry'] == true) {
       handler.next(err);
       return;
     }
 
     // ── Refresh já em andamento: apenas aguarda e retenta ──────────────────
     if (_refreshCompleter != null) {
+      print('=== AuthInterceptor: aguardando refresh em andamento (${err.requestOptions.path}) ===');
       final newToken = await _refreshCompleter!.future;
       if (newToken != null) {
         await _retryRequest(err, handler, newToken);
@@ -73,37 +79,38 @@ class AuthInterceptor extends Interceptor {
     }
 
     // ── Primeiro 401: executa o refresh ────────────────────────────────────
+    print('=== AuthInterceptor: iniciando refresh de token ===');
     _refreshCompleter = Completer<String?>();
     try {
       final prefs = await SharedPreferences.getInstance();
       final refreshToken = prefs.getString(AppConstants.refreshTokenKey);
 
-      if (refreshToken != null) {
+      if (refreshToken == null) {
+        print('=== AuthInterceptor: refresh token ausente → expirando sessão ===');
+      } else {
         final response = await dio.post(
           '/auth/refresh',
           data: {'refreshToken': refreshToken},
-          // Marca a requisição de refresh para não reentrar neste interceptor.
           options: Options(extra: {'_authRetry': true}),
         );
         final newToken = response.data['accessToken'] as String?;
 
         if (newToken != null) {
+          print('=== AuthInterceptor: refresh bem-sucedido, novo token obtido ===');
           await prefs.setString(AppConstants.accessTokenKey, newToken);
-
-          // Desbloqueia todas as requisições que estavam aguardando.
           _refreshCompleter!.complete(newToken);
-
-          // Retenta a requisição que iniciou o refresh.
           await _retryRequest(err, handler, newToken);
           return;
         }
+        print('=== AuthInterceptor: refresh retornou sem accessToken ===');
       }
 
       // Refresh token ausente, inválido ou resposta sem accessToken.
       await prefs.clear();
       _refreshCompleter!.complete(null);
       SessionNotifier.instance.expire();
-    } catch (_) {
+    } catch (e) {
+      print('=== AuthInterceptor: refresh falhou com exceção: $e ===');
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       if (!(_refreshCompleter?.isCompleted ?? true)) {
@@ -111,7 +118,6 @@ class AuthInterceptor extends Interceptor {
       }
       SessionNotifier.instance.expire();
     } finally {
-      // Limpa o completer para o próximo ciclo de refresh.
       _refreshCompleter = null;
     }
 
@@ -151,8 +157,30 @@ class AppException implements Exception {
     if (e.type == DioExceptionType.cancel) {
       return AppException('cancelled');
     }
+
+    // Log completo para diagnóstico — visível em adb logcat no release.
+    print('=== AppException [${e.type.name}] '
+        'status=${e.response?.statusCode} '
+        'url=${e.requestOptions.path} '
+        'msg=${e.message} ===');
+
+    // Erros sem resposta do servidor (connection, timeout, SSL, DNS…).
+    if (e.response == null) {
+      final label = switch (e.type) {
+        DioExceptionType.connectionTimeout => 'Tempo de conexão esgotado',
+        DioExceptionType.receiveTimeout    => 'Servidor demorou para responder',
+        DioExceptionType.sendTimeout       => 'Tempo de envio esgotado',
+        DioExceptionType.connectionError   => 'Sem conexão com o servidor',
+        DioExceptionType.badCertificate    => 'Erro de certificado SSL',
+        _                                  => 'Erro de rede',
+      };
+      return AppException(label, statusCode: null);
+    }
+
     final data = e.response?.data;
-    final message = data is Map ? (data['message'] ?? 'An error occurred') : 'An error occurred';
+    final message = data is Map
+        ? (data['message'] ?? data['error'] ?? 'Erro no servidor')
+        : 'Erro no servidor';
     return AppException(message.toString(), statusCode: e.response?.statusCode);
   }
 
